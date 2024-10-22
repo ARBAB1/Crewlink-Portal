@@ -46,8 +46,8 @@ const menuGroups = [
           </svg>
         ),
         label: "Dashboard",
-        route: "#",
-        children: [{ label: "eCommerce", route: "/" }],
+        route: "/dashboard",
+       
       },
       {
         icon: (
@@ -65,8 +65,8 @@ const menuGroups = [
             />
           </svg>
         ),
-        label: "Calendar",
-        route: "/calendar",
+        label: "Airline Management",
+        route: "/airline",
       },
       {
         icon: (
@@ -88,8 +88,8 @@ const menuGroups = [
             />
           </svg>
         ),
-        label: "Profile",
-        route: "/profile",
+        label: "Region Management",
+        route: "/region",
       },
       {
         icon: (
@@ -123,11 +123,11 @@ const menuGroups = [
             />
           </svg>
         ),
-        label: "Forms",
-        route: "#",
+        label: "Report Management",
+        route: "/postreport",
         children: [
-          { label: "Form Elements", route: "/forms/form-elements" },
-          { label: "Form Layout", route: "/forms/form-layout" },
+          { label: "Post Report", route: "/postreport" },
+          { label: "User Report", route: "/userreport" },
         ],
       },
       {
@@ -158,8 +158,8 @@ const menuGroups = [
             </defs>
           </svg>
         ),
-        label: "Tables",
-        route: "/tables",
+        label: "User Management",
+        route: "/user",
       },
       {
         icon: (
@@ -329,7 +329,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   return (
     <ClickOutside onClick={() => setSidebarOpen(false)}>
       <aside
-        className={`fixed left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:translate-x-0 ${
+        className={`fixed left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-[url('/images/logo/sidebar.png')] duration-300 ease-linear lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -339,7 +339,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <Image
               width={176}
               height={32}
-              src={"/images/logo/logo.svg"}
+              src={"/images/logo/splashLoader.png"}
               alt="Logo"
               priority
             />
