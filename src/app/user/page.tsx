@@ -1,238 +1,203 @@
 "use client";
+import { Table, Button, Modal, Form, Input, message, Avatar } from 'antd';
+import DefaultLayout from '@/components/Layouts/DefaultLayout';
+import { useState, useEffect } from 'react';
+import { parse } from 'path';
 
-import React, { useState } from "react";
-import { Descriptions, Badge, Button, Avatar, Tag, Divider, Modal, Form, Input, DatePicker, Switch } from "antd";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
-import moment from "moment";
-
-interface UserDetails {
-  userImage: string;
-  userName: string;
-  userID: string;
-  status: "Online" | "Offline";
-  currentCheckin: string;
-  airline: string;
-  airlineDocument: string;
-  employeeExpiry: string;
-  dob: string;
-  postCount: number;
-  bio: string;
-  phoneNo: string;
-  userSuspended: boolean;
-  suspensionDays: number;
-}
-
-const UserDetailPage: React.FC = () => {
-  const [userDetails, setUserDetails] = useState<UserDetails | null>({
-    userImage: "https://via.placeholder.com/150",
-    userName: "John Doe",
-    userID: "USR12345",
-    status: "Online",
-    currentCheckin: "2024-10-22 09:15 AM",
-    airline: "ABC Airlines",
-    airlineDocument: "Employee Contract",
-    employeeExpiry: "2024-12-31",
-    dob: "1990-01-01",
-    postCount: 42,
-    bio: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    phoneNo: "+1234567890",
-    userSuspended: false,
-    suspensionDays: 0,
-  });
-
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [isAddModalOpen, setAddModalOpen] = useState(false);
+const UserReporting = () => {
+  const [reports, setReports] = useState<any[]>([]);
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [suspendUserId, setSuspendUserId] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const Token = localStorage.getItem('access_token'); // Fetch access token from local storage
 
-  // Function to handle editing a user
-  const handleEditUser = () => {
-    form.setFieldsValue({
-      ...userDetails,
-      dob: moment(userDetails?.dob),
-      employeeExpiry: moment(userDetails?.employeeExpiry),
-    });
-    setEditModalOpen(true);
+  // Fetch all reported users
+  const fetchReportedUsers = async () => {
+    try {
+      const response = await fetch(`https://sn1pgw0k-5000.inc1.devtunnels.ms/users/get-all-users-admin`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${Token}`,
+        },
+      });
+      const data = await response.json();
+      if (data && data.data) {
+        setReports(data.data);
+      } else {
+        message.error('Failed to fetch reported users');
+      }
+    } catch (error) {
+      message.error('Error fetching reported users');
+    }
   };
 
-  // Function to handle adding a new user
-  const handleAddUser = () => {
-    form.resetFields();
-    setUserDetails(null);
-    setAddModalOpen(true);
+  useEffect(() => {
+    fetchReportedUsers();
+  }, []);
+
+  // Handle suspend user
+  const handleSuspendUser = async (values: any) => {
+    const suspendDays = values.suspendDays;
+    console.log(suspendUserId, suspendDays, "suspendUserId, suspendDays")
+
+    try {
+      const response = await fetch('https://sn1pgw0k-5000.inc1.devtunnels.ms/users/suspend-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${Token}`,
+        },
+        body: JSON.stringify({
+          user_id: suspendUserId,
+          suspendDays: parseInt(suspendDays),
+        }),
+      });
+      const result = await response.json();
+      console.log(result, "result")
+      if (result.statusCode === 200) {
+        message.success(`User suspended for ${suspendDays} days`);
+        setIsSuspendModalOpen(false);
+        form.resetFields();
+        fetchReportedUsers();
+      } else {
+        message.error('Failed to suspend user');
+      }
+    } catch (error) {
+      message.error('Error suspending user');
+    }
+  };
+  const handleUnSuspendUser = async (values: any) => {
+    const suspendDays = values.suspendDays;
+    console.log(suspendUserId, suspendDays, "suspendUserId, suspendDays")
+
+    try {
+      const response = await fetch('https://sn1pgw0k-5000.inc1.devtunnels.ms/users/un-suspend-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${Token}`,
+        },
+        body: JSON.stringify({
+          user_id: suspendUserId,
+        
+        }),
+      });
+      const result = await response.json();
+      console.log(result, "result")
+      if (result.statusCode === 200) {
+        message.success(`User Unsuspended`);
+        // setIsSuspendModalOpen(false);
+        // form.resetFields();
+        fetchReportedUsers();
+      } else {
+        message.error('Failed to suspend user');
+      }
+    } catch (error) {
+      message.error('Error suspending user');
+    }
   };
 
-  // Function to handle submitting the form (both for edit and add)
-  const handleFormSubmit = (values: any) => {
-    const updatedUser = {
-      ...values,
-      dob: values.dob.format("YYYY-MM-DD"),
-      employeeExpiry: values.employeeExpiry.format("YYYY-MM-DD"),
-    };
-    setUserDetails(updatedUser);
-
-    setEditModalOpen(false);
-    setAddModalOpen(false);
+  // Open suspend modal
+  const openSuspendModal = (userId: number) => {
+    console.log(userId, "userId")
+    setSuspendUserId(userId);
+    setIsSuspendModalOpen(true);
   };
+
+  // Columns for the Ant Design table
+  const columns = [
+    {
+      title: 'User',
+      key: 'reportedUser',
+      render: (text: any, record: any) => (
+        <>
+          <Avatar src={record?.profile_picture_url} />
+          <span style={{ marginLeft: 8 }}>{record?.user_name}</span>
+        </>
+      ),
+    },
+    {
+      title: 'Email',
+     
+      key: 'email',
+      render: (text: any, record: any) => (
+        <>
+          {/* <Avatar src={record.reporter.profile_picture_url} /> */}
+          <span style={{ marginLeft: 8 }}>{record.email}</span>
+        </>
+      ),
+    },
+    {
+      title: 'Post Count',
+      key: 'postCount',
+      render: (text: any, record: any) => (
+        <>
+          {/* <Avatar src={record.reporter.profile_picture_url} /> */}
+          <span style={{ marginLeft: 8 }}>{record.post_count}</span>
+        </>
+      ),
+    },
+    {
+      title: 'Airline ',
+      key: 'airline',
+      render: (text: any, record: any) => (
+        <>
+          {/* <Avatar src={record.reporter.profile_picture_url} /> */}
+          <span style={{ marginLeft: 8 }}>{record.airline}</span>
+        </>
+      ),
+    },
+    {
+      title: 'Suspension Status',
+      key: 'actions',
+      render: (text: any, record: any) => (
+        record.suspended_flag=="N"?(
+    <h4>User Not Suspended</h4>
+        ):(
+
+          <h4>User Suspended for {record.suspend_time} days</h4>
+        )
+      
+      ),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (text: any, record: any) => (
+        record.suspended_flag=="N"?(
+          <Button onClick={() => openSuspendModal(record.user_id)}>Suspend User</Button>
+        ):(
+
+          <Button onClick={() => handleUnSuspendUser(record.user_id)}>Unsuspend User</Button>
+        )
+      
+      ),
+    },
+  ];
 
   return (
     <DefaultLayout>
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">User Details</h1>
-        {userDetails ? (
-          <Descriptions
-            bordered
-            column={1}
-            size="middle"
-            title={
-              <div style={{ display: "flex", alignItems: "center" }}>
-                <Avatar
-                  size={100}
-                  src={userDetails.userImage}
-                  alt="User Image"
-                  style={{ marginRight: "20px" }}
-                />
-                <div>
-                  <h2>{userDetails.userName}</h2>
-                  <Tag color={userDetails.status === "Online" ? "green" : "red"}>
-                    {userDetails.status}
-                  </Tag>
-                </div>
-              </div>
-            }
-          >
-            <Descriptions.Item label="User ID">{userDetails.userID}</Descriptions.Item>
-            <Descriptions.Item label="Current Check-in">
-              {userDetails.currentCheckin}
-            </Descriptions.Item>
-            <Descriptions.Item label="Airline">{userDetails.airline}</Descriptions.Item>
-            <Descriptions.Item label="Airline Document">
-              {userDetails.airlineDocument}
-            </Descriptions.Item>
-            <Descriptions.Item label="Employee Expiry">
-              {userDetails.employeeExpiry}
-            </Descriptions.Item>
-            <Descriptions.Item label="Date of Birth">{userDetails.dob}</Descriptions.Item>
-            <Descriptions.Item label="Post Count">{userDetails.postCount}</Descriptions.Item>
-            <Descriptions.Item label="Bio">{userDetails.bio}</Descriptions.Item>
-            <Descriptions.Item label="Phone No">{userDetails.phoneNo}</Descriptions.Item>
-            <Descriptions.Item label="User Suspended">
-              {userDetails.userSuspended ? (
-                <Tag color="red">Yes</Tag>
-              ) : (
-                <Tag color="green">No</Tag>
-              )}
-            </Descriptions.Item>
-            {userDetails.userSuspended && (
-              <Descriptions.Item label="Suspension Days">
-                {userDetails.suspensionDays}
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-        ) : (
-          <p>No user details available. Please add a user.</p>
-        )}
+        <h1 className="text-3xl font-bold mb-8">User Reporting</h1>
+        <Table columns={columns} dataSource={reports} rowKey="report_id" />
 
-        <Divider />
-
-        <Button type="primary" onClick={handleEditUser} style={{ marginRight: "10px" }}>
-          {userDetails ? "Edit User" : "Add User"}
-        </Button>
-        <Button type="primary" onClick={handleAddUser} style={{ marginRight: "10px" }}>
-          Add New User
-        </Button>
-
-        {/* Edit User Modal */}
+        {/* Suspend User Modal */}
         <Modal
-          title="Edit User"
-          open={isEditModalOpen}
-          onOk={form.submit}
-          onCancel={() => setEditModalOpen(false)}
-          okButtonProps={{ style: { backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' } }}
+          title="Suspend User"
+          open={isSuspendModalOpen}
+          onOk={() => form.submit()}
+          onCancel={() => setIsSuspendModalOpen(false)}
         >
-          <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-            <Form.Item name="userName" label="User Name" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="userID" label="User ID" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="currentCheckin" label="Current Check-in">
-              <Input />
-            </Form.Item>
-            <Form.Item name="airline" label="Airline">
-              <Input />
-            </Form.Item>
-            <Form.Item name="airlineDocument" label="Airline Document">
-              <Input />
-            </Form.Item>
-            <Form.Item name="employeeExpiry" label="Employee Expiry" rules={[{ required: true }]}>
-              <DatePicker />
-            </Form.Item>
-            <Form.Item name="dob" label="Date of Birth" rules={[{ required: true }]}>
-              <DatePicker />
-            </Form.Item>
-            <Form.Item name="postCount" label="Post Count">
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item name="bio" label="Bio">
-              <Input.TextArea />
-            </Form.Item>
-            <Form.Item name="phoneNo" label="Phone No" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="userSuspended" label="User Suspended" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-            <Form.Item name="suspensionDays" label="Suspension Days" rules={[{ required: false }]}>
-              <Input type="number" disabled={!form.getFieldValue("userSuspended")} />
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* Add User Modal */}
-        <Modal
-          title="Add User"
-          open={isAddModalOpen}
-          onOk={form.submit}
-          onCancel={() => setAddModalOpen(false)}
-          okButtonProps={{ style: { backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' } }}
-        >
-          <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-            <Form.Item name="userName" label="User Name" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="userID" label="User ID" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="currentCheckin" label="Current Check-in">
-              <Input />
-            </Form.Item>
-            <Form.Item name="airline" label="Airline">
-              <Input />
-            </Form.Item>
-            <Form.Item name="airlineDocument" label="Airline Document">
-              <Input />
-            </Form.Item>
-            <Form.Item name="employeeExpiry" label="Employee Expiry" rules={[{ required: true }]}>
-              <DatePicker />
-            </Form.Item>
-            <Form.Item name="dob" label="Date of Birth" rules={[{ required: true }]}>
-              <DatePicker />
-            </Form.Item>
-            <Form.Item name="postCount" label="Post Count">
-              <Input type="number" />
-            </Form.Item>
-            <Form.Item name="bio" label="Bio">
-              <Input.TextArea />
-            </Form.Item>
-            <Form.Item name="phoneNo" label="Phone No" rules={[{ required: true }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="userSuspended" label="User Suspended" valuePropName="checked">
-              <Switch />
-            </Form.Item>
-            <Form.Item name="suspensionDays" label="Suspension Days" rules={[{ required: false }]}>
-              <Input type="number" disabled={!form.getFieldValue("userSuspended")} />
+          <Form form={form} layout="vertical" onFinish={handleSuspendUser}>
+            <Form.Item
+              name="suspendDays"
+              label="Suspend User for Days"
+              rules={[{ required: true, message: 'Please enter the number of suspension days' }]}
+            >
+              <Input type="number" placeholder="Enter number of days" />
             </Form.Item>
           </Form>
         </Modal>
@@ -241,4 +206,4 @@ const UserDetailPage: React.FC = () => {
   );
 };
 
-export default UserDetailPage;
+export default UserReporting;
