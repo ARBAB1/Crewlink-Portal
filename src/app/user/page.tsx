@@ -158,7 +158,7 @@ const UserReporting = () => {
     <h4>User Not Suspended</h4>
         ):(
 
-          <h4>User Suspended for {record.suspend_time} days</h4>
+          <h4>User Suspended for {record.suspend_days} days</h4>
         )
       
       ),
