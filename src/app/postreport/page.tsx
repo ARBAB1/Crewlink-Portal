@@ -1,112 +1,105 @@
 "use client";
+import { Table, Button, Modal, message, Avatar } from 'antd';
+import DefaultLayout from '@/components/Layouts/DefaultLayout';
+import { useState, useEffect } from 'react';
 
-import React, { useState } from "react";
-import { Table, Button, Modal, Space, message, Input } from "antd";
-import DefaultLayout from "@/components/Layouts/DefaultLayout";
+const PostReporting = () => {
+  const [postReports, setPostReports] = useState<any[]>([]);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any | null>(null);
+  const Token = localStorage.getItem('access_token'); // Fetch access token from local storage
 
-interface PostReport {
-  postId: string;
-  postTitle: string;
-  description: string;
-  mediaType: "image" | "video" | "text";
-  postOwnerId: string;
-  postOwnerName: string;
-  complaint: string;
-}
-
-const initialReports: PostReport[] = [
-  {
-    postId: "1",
-    postTitle: "Post Title 1",
-    description: "Description for post 1",
-    mediaType: "image",
-    postOwnerId: "123",
-    postOwnerName: "John Doe",
-    complaint: "Inappropriate content",
-  },
-  {
-    postId: "2",
-    postTitle: "Post Title 2",
-    description: "Description for post 2",
-    mediaType: "text",
-    postOwnerId: "124",
-    postOwnerName: "Jane Smith",
-    complaint: "Spam",
-  },
-];
-
-const PostReportManagement: React.FC = () => {
-  const [reports, setReports] = useState<PostReport[]>(initialReports);
-  const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<PostReport | null>(null);
-
-  const handleDelete = (report: PostReport) => {
-    setSelectedReport(report);
-    setDeleteModalVisible(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedReport) {
-      setReports(reports.filter((report) => report.postId !== selectedReport.postId));
-      message.success("Post deleted successfully.");
-      setDeleteModalVisible(false);
-      setSelectedReport(null);
+  // Fetch post reports
+  const fetchPostReports = async () => {
+    try {
+      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/report/get-all-reported-posts/1/10', {
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${Token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.data) {
+        setPostReports(data.data);
+      } else {
+        message.error('Failed to fetch post reports');
+      }
+    } catch (error) {
+      message.error('Error fetching post reports');
     }
   };
 
-  const handleCancelDelete = () => {
-    setDeleteModalVisible(false);
-    setSelectedReport(null);
+  useEffect(() => {
+    fetchPostReports();
+  }, []);
+
+  // Handle delete post report
+  const handleDeletePostReport = async (post_id: number) => {
+    try {
+      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/report/delete-reported-post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${Token}`,
+        },
+        body: JSON.stringify({ post_id }),
+      });
+      const result = await response.json();
+      if (result.statusCode === 200) {
+        message.success('Post report deleted successfully');
+        fetchPostReports();
+      } else {
+        message.error('Failed to delete post report');
+      }
+    } catch (error) {
+      message.error('Error deleting post report');
+    }
   };
 
-  const columns = [
+  // Handle view post details in modal
+  const handleViewPost = (post: any) => {
+    setSelectedPost(post);
+    setIsPostModalOpen(true);
+  };
+
+  // Columns for the table
+  const postColumns = [
     {
-      title: "Post ID",
-      dataIndex: "postId",
-      key: "postId",
+      title: 'Post ID',
+      dataIndex: ['reportedPost', 'post_id'],
+      key: 'post_id',
     },
     {
-      title: "Post Title",
-      dataIndex: "postTitle",
-      key: "postTitle",
-    },
-    {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
-    },
-    {
-      title: "Media Type",
-      dataIndex: "mediaType",
-      key: "mediaType",
-      render: (mediaType: "image" | "video" | "text") => (
-        <span>{mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}</span>
+      title: 'View Post',
+      key: 'viewPost',
+      render: (text: any, record: any) => (
+        <Button onClick={() => handleViewPost(record.reportedPost)}>View Post</Button>
       ),
     },
     {
-      title: "Post Owner ID",
-      dataIndex: "postOwnerId",
-      key: "postOwnerId",
+      title: 'Reported By',
+      key: 'reported_by',
+      render: (text: any, record: any) => (
+        <>
+          <Avatar src={record.reported_by.profile_picture_url} alt={record.reported_by.user_name} />
+          <span style={{ marginLeft: 8 }}>{record.reported_by.user_name}</span>
+        </>
+      ),
     },
     {
-      title: "Post Owner Name",
-      dataIndex: "postOwnerName",
-      key: "postOwnerName",
+      title: 'Complain',
+      dataIndex: ['reportDetails', 'report_reason'],
+      key: 'report_reason',
     },
     {
-      title: "Complaint",
-      dataIndex: "complaint",
-      key: "complaint",
-    },
-    {
-      title: "Action",
-      key: "action",
-      render: (_: any, report: PostReport) => (
-        <Space size="middle">
-          <Button type="primary" danger onClick={() => handleDelete(report)}>
-            Delete Post
-          </Button>
-        </Space>
+      title: 'Actions',
+      key: 'actions',
+      render: (text: any, record: any) => (
+        <Button danger onClick={() => handleDeletePostReport(record.reportedPost.post_id)}>
+          Delete
+        </Button>
       ),
     },
   ];
@@ -114,23 +107,41 @@ const PostReportManagement: React.FC = () => {
   return (
     <DefaultLayout>
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Post Report Management</h1>
-        <Table columns={columns} dataSource={reports} rowKey="postId" />
+        <h1 className="text-3xl font-bold mb-8">Post Reporting Management</h1>
+        <Table columns={postColumns} dataSource={postReports} rowKey={(record) => record.reportedPost.post_id} />
 
-        {/* Delete Confirmation Modal */}
-        <Modal
-          title="Delete Post"
-          visible={isDeleteModalVisible}
-          onOk={confirmDelete}
-          onCancel={handleCancelDelete}
-          okButtonProps={{ danger: true }}
-          okText="Delete"
-        >
-          <p>Are you sure you want to delete this post?</p>
-        </Modal>
+        {/* Post Details Modal */}
+        {selectedPost && (
+          <Modal
+            title={`Post by ${selectedPost.postOwnerDetails.user_name}`}
+            open={isPostModalOpen}
+            onCancel={() => setIsPostModalOpen(false)}
+            footer={null}
+          >
+            <div>
+              <Avatar
+                src={selectedPost.postOwnerDetails.profile_picture_url}
+                alt={selectedPost.postOwnerDetails.user_name}
+                size={64}
+              />
+              <h3>{selectedPost.postOwnerDetails.user_name}</h3>
+              <img
+                src={selectedPost.attachments[0]?.attachment_url}
+                alt="Post Attachment"
+                style={{ width: '100%', marginTop: 16 }}
+              />
+              <p style={{ marginTop: 16 }}>
+                <strong>Created At:</strong> {new Date(selectedPost.created_at).toLocaleString()}
+              </p>
+              <p>
+                <strong>Post City:</strong> {selectedPost.post_city}
+              </p>
+            </div>
+          </Modal>
+        )}
       </div>
     </DefaultLayout>
   );
 };
 
-export default PostReportManagement;
+export default PostReporting;

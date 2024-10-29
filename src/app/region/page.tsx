@@ -2,15 +2,16 @@
 
 import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 
 interface Country {
-  countryId: number;
-  countryName: string;
+  country_id: number;
+  country_name: string;
   countryCode: string;
 }
 
-interface State {
+interface StateType {
   stateId: number;
   countryCode: string;
   stateName: string;
@@ -19,116 +20,162 @@ interface State {
 interface City {
   cityId: number;
   stateId: number;
-  countryCode: string;
   cityName: string;
 }
 
 const RegionManagement: React.FC = () => {
   const [countries, setCountries] = useState<Country[]>([]);
-  const [states, setStates] = useState<State[]>([]);
+  const [states, setStates] = useState<StateType[]>([]);
   const [cities, setCities] = useState<City[]>([]);
-
   const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
   const [isStateModalOpen, setIsStateModalOpen] = useState(false);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
-
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
+  const [editingState, setEditingState] = useState<StateType | null>(null);
+  const [editingCity, setEditingCity] = useState<City | null>(null);
   const [form] = Form.useForm();
 
-  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [selectedState, setSelectedState] = useState<number | null>(null);
+  const router = useRouter();
+  const token = localStorage.getItem('access_token');
 
-  const generateId = () => Date.now() + Math.floor(Math.random() * 1000);
+  // Fetch countries
+  const fetchCountries = async () => {
+    try {
+      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/get-all-countries-portal', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        setCountries(data.data);
+      } else {
+        message.error('Failed to fetch countries');
+      }
+    } catch (error) {
+      message.error('An error occurred while fetching countries');
+    }
+  };
 
-  const handleAddCountry = (values: Country) => {
-    const newCountry: Country = {
-      countryId: generateId(), // Assign unique ID only once
-      countryName: values.countryName,
-      countryCode: values.countryCode,
-    };
-    setCountries([...countries, newCountry]);
+  // Fetch states
+
+
+  useEffect(() => {
+    fetchCountries();
+
+  }, []);
+
+  // CRUD operations for Countries
+  const handleAddCountry = async (values: Country) => {
+    try {
+      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/add-country', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${token}`
+        },
+        body: JSON.stringify({ country_name: values.country_name })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        message.success('Country added successfully');
+        fetchCountries();
+      } else {
+        message.error('Failed to add country');
+      }
+    } catch (error) {
+      message.error('An error occurred while adding the country');
+    }
     setIsCountryModalOpen(false);
-    message.success('Country added successfully');
+    form.resetFields();
   };
 
-  const handleAddState = (values: State) => {
-    const newState: State = {
-      stateId: generateId(), // Assign unique ID only once
-      countryCode: values.countryCode,
-      stateName: values.stateName,
-    };
-    setStates([...states, newState]);
-    setIsStateModalOpen(false);
-    message.success('State added successfully');
+  const handleEditCountry = (country: Country) => {
+    setIsEditMode(true);
+    setEditingCountry(country);
+    setIsCountryModalOpen(true);
+    form.setFieldsValue({
+      country_name: country.country_name,
+    });
   };
 
-  const handleAddCity = (values: City) => {
-    const newCity: City = {
-      cityId: generateId(), // Assign unique ID only once
-      stateId: values.stateId,
-      countryCode: values.countryCode,
-      cityName: values.cityName,
-    };
-    setCities([...cities, newCity]);
-    setIsCityModalOpen(false);
-    message.success('City added successfully');
+  const handleUpdateCountry = async (values: Country) => {
+    console.log(editingCountry?.country_id, editingCountry?.country_name, values.country_name)
+    try {
+      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/update-country', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          country_id: `${editingCountry?.country_id}`,
+          country_name: values.country_name,
+        })
+      });
+      if (response.ok) {
+        message.success('Country updated successfully');
+        fetchCountries();
+      } else {
+        message.error('Failed to update country');
+      }
+    } catch (error) {
+      message.error('An error occurred while updating the country');
+    }
+    setIsCountryModalOpen(false);
+    setIsEditMode(false);
+    setEditingCountry(null);
+    form.resetFields();
+  };
+
+  const handleDeleteCountry = async (country_id: number) => {
+    console.log(country_id)
+    try {
+      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/delete-country', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${token}`
+        },
+        body: JSON.stringify(
+          {country_id: country_id }
+        )
+      });
+      console.log(response)
+      if (response.ok) {
+        message.success('Country deleted successfully');
+        fetchCountries();
+      } else {
+        message.error('Failed to delete country');
+      }
+    } catch (error) {
+      message.error('An error occurred while deleting the country');
+    }
+  };
+  const handleNavigateToStates = (country_id: number) => {
+    router.push(`/region/${country_id}`); // Navigate to the states page with country_id
   };
 
   const countryColumns = [
+    { title: 'Country ID', dataIndex: 'country_id', key: 'country_id' },
+    { title: 'Country Name', dataIndex: 'country_name', key: 'country_name' },
     {
-      title: 'Country ID',
-      dataIndex: 'countryId',
-      key: 'countryId',
-    },
-    {
-      title: 'Country Name',
-      dataIndex: 'countryName',
-      key: 'countryName',
-    },
-    {
-      title: 'Country Code',
-      dataIndex: 'countryCode',
-      key: 'countryCode',
-    },
-  ];
-
-  const stateColumns = [
-    {
-      title: 'State ID',
-      dataIndex: 'stateId',
-      key: 'stateId',
-    },
-    {
-      title: 'State Name',
-      dataIndex: 'stateName',
-      key: 'stateName',
-    },
-    {
-      title: 'Country Code',
-      dataIndex: 'countryCode',
-      key: 'countryCode',
-    },
-  ];
-
-  const cityColumns = [
-    {
-      title: 'City ID',
-      dataIndex: 'cityId',
-      key: 'cityId',
-    },
-    {
-      title: 'City Name',
-      dataIndex: 'cityName',
-      key: 'cityName',
-    },
-    {
-      title: 'State ID',
-      dataIndex: 'stateId',
-      key: 'stateId',
-    },
-    {
-      title: 'Country Code',
-      dataIndex: 'countryCode',
-      key: 'countryCode',
+      title: 'Actions',
+      key: 'actions',
+      render: (text: any, record: Country) => (
+        <>
+          <Button type="link" onClick={() => handleEditCountry(record)}>Edit</Button>
+          <Button type="link" danger onClick={() => handleDeleteCountry(record.country_id)}>Delete</Button>
+          <Button type="link" danger onClick={() => handleNavigateToStates(record.country_id)}>Add State</Button>
+        </>
+      ),
     },
   ];
 
@@ -137,101 +184,36 @@ const RegionManagement: React.FC = () => {
       <div className="container mx-auto p-8">
         <h1 className="text-3xl font-bold mb-8">Region Management</h1>
 
-        {/* Country Table and Modal */}
+        {/* Country Management */}
         <Button
           type="primary"
           className="mb-4"
-          onClick={() => setIsCountryModalOpen(true)}
+          onClick={() => {
+            setIsEditMode(false);
+            setIsCountryModalOpen(true);
+          }}
           style={{ backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' }}
         >
           Add Country
         </Button>
-        <Table columns={countryColumns} dataSource={countries} rowKey="countryId" />
-
+        <Table columns={countryColumns} dataSource={countries} rowKey="country_id" />
         <Modal
-          title="Add Country"
+          title={isEditMode ? "Edit Country" : "Add Country"}
           open={isCountryModalOpen}
           onOk={() => form.submit()}
           onCancel={() => setIsCountryModalOpen(false)}
-          okButtonProps={{ style: { backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' } }}
         >
-          <Form form={form} layout="vertical" onFinish={handleAddCountry}>
-            <Form.Item name="countryName" label="Country Name" rules={[{ required: true, message: 'Please enter a country name' }]}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={isEditMode ? handleUpdateCountry : handleAddCountry}
+          >
+            <Form.Item
+              name="country_name"
+              label="Country Name"
+              rules={[{ required: true, message: 'Please enter a country name' }]}
+            >
               <Input />
-            </Form.Item>
-            <Form.Item name="countryCode" label="Country Code" rules={[{ required: true, message: 'Please enter a country code' }]}>
-              <Input />
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* State Table and Modal */}
-        <Button
-          type="primary"
-          className="mb-4"
-          onClick={() => setIsStateModalOpen(true)}
-          style={{ backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' }}
-        >
-          Add State
-        </Button>
-        <Table columns={stateColumns} dataSource={states} rowKey="stateId" />
-
-        <Modal
-          title="Add State"
-          open={isStateModalOpen}
-          onOk={() => form.submit()}
-          onCancel={() => setIsStateModalOpen(false)}
-          okButtonProps={{ style: { backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' } }}
-        >
-          <Form form={form} layout="vertical" onFinish={handleAddState}>
-            <Form.Item name="stateName" label="State Name" rules={[{ required: true, message: 'Please enter a state name' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="countryCode" label="Country Code" rules={[{ required: true, message: 'Please select a country' }]}>
-              <Select placeholder="Select Country">
-                {countries.map((country) => (
-                  <Select.Option key={country.countryCode} value={country.countryCode}>
-                    {country.countryName}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Form>
-        </Modal>
-
-        {/* City Table and Modal */}
-        <Button
-          type="primary"
-          className="mb-4"
-          onClick={() => setIsCityModalOpen(true)}
-          style={{ backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' }}
-        >
-          Add City
-        </Button>
-        <Table columns={cityColumns} dataSource={cities} rowKey="cityId" />
-
-        <Modal
-          title="Add City"
-          open={isCityModalOpen}
-          onOk={() => form.submit()}
-          onCancel={() => setIsCityModalOpen(false)}
-          okButtonProps={{ style: { backgroundColor: 'rgb(28, 36, 52)', borderColor: 'rgb(28, 36, 52)' } }}
-        >
-          <Form form={form} layout="vertical" onFinish={handleAddCity}>
-            <Form.Item name="cityName" label="City Name" rules={[{ required: true, message: 'Please enter a city name' }]}>
-              <Input />
-            </Form.Item>
-            <Form.Item name="stateId" label="State" rules={[{ required: true, message: 'Please select a state' }]}>
-              <Select placeholder="Select State" onChange={(value) => setSelectedState(value)}>
-                {states.map((state) => (
-                  <Select.Option key={state.stateId} value={state.stateId}>
-                    {state.stateName}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-            <Form.Item label="Country">
-              <Input value={selectedState ? states.find((s) => s.stateId === selectedState)?.countryCode : ''} disabled />
             </Form.Item>
           </Form>
         </Modal>
