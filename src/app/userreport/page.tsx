@@ -14,7 +14,7 @@ const UserReporting = () => {
   // Fetch all reported users
   const fetchReportedUsers = async () => {
     try {
-      const response = await fetch(`https://sn1pgw0k-6000.inc1.devtunnels.ms/report/get-all-reported-users/1/10`, {
+      const response = await fetch(`https://crewlink.development.logomish.com/report/get-all-reported-users/1/10`, {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'TwillioAPI',
@@ -42,7 +42,7 @@ const UserReporting = () => {
     console.log(suspendUserId, suspendDays, "suspendUserId, suspendDays")
 
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/users/suspend-user', {
+      const response = await fetch('https://crewlink.development.logomish.com/users/suspend-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

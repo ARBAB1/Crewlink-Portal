@@ -42,7 +42,7 @@ const RegionManagement: React.FC = () => {
   // Fetch countries
   const fetchCountries = async () => {
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/get-all-countries-portal', {
+      const response = await fetch('https://crewlink.development.logomish.com/check-in/get-all-countries-portal', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ const RegionManagement: React.FC = () => {
   // CRUD operations for Countries
   const handleAddCountry = async (values: Country) => {
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/add-country', {
+      const response = await fetch('https://crewlink.development.logomish.com/check-in/add-country', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ const RegionManagement: React.FC = () => {
   const handleUpdateCountry = async (values: Country) => {
     console.log(editingCountry?.country_id, editingCountry?.country_name, values.country_name)
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/update-country', {
+      const response = await fetch('https://crewlink.development.logomish.com/check-in/update-country', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ const RegionManagement: React.FC = () => {
   const handleDeleteCountry = async (country_id: number) => {
     console.log(country_id)
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/delete-country', {
+      const response = await fetch('https://crewlink.development.logomish.com/check-in/delete-country', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

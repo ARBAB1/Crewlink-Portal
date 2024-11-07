@@ -12,7 +12,7 @@ const PostReporting = () => {
   // Fetch post reports
   const fetchPostReports = async () => {
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/report/get-all-reported-posts/1/10', {
+      const response = await fetch('https://crewlink.development.logomish.com/report/get-all-reported-posts/1/10', {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'TwillioAPI',
@@ -37,7 +37,7 @@ const PostReporting = () => {
   // Handle delete post report
   const handleDeletePostReport = async (post_id: number) => {
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/report/delete-reported-post', {
+      const response = await fetch('https://crewlink.development.logomish.com/report/delete-reported-post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

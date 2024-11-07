@@ -23,7 +23,7 @@ const RegionManagement: React.FC<StateProps> = ({ params }) => {
   // Fetch states for the selected country
   const fetchStates = async () => {
     try {
-      const response = await fetch(`https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/get-all-states-portal/${country_id}`, {
+      const response = await fetch(`https://crewlink.development.logomish.com/check-in/get-all-states-portal/${country_id}`, {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'TwillioAPI',
@@ -49,8 +49,8 @@ const RegionManagement: React.FC<StateProps> = ({ params }) => {
   const handleAddOrUpdateState = async (values: any) => {
     console.log({ state_name: values.state_name,country_id: parseInt(country_id) }, "values")
     const url = editingState
-      ? 'https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/update-state'
-      : 'https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/add-state';
+      ? 'https://crewlink.development.logomish.com/check-in/update-state'
+      : 'https://crewlink.development.logomish.com/check-in/add-state';
 
     const method = editingState ? 'POST' : 'POST';
 
@@ -89,7 +89,7 @@ console.log(url, method, payload, "url, method, payload")
   // Handle delete state
   const handleDeleteState = async (state_id: number) => {
     try {
-      const response = await fetch('https://sn1pgw0k-6000.inc1.devtunnels.ms/check-in/delete-state', {
+      const response = await fetch('https://crewlink.development.logomish.com/check-in/delete-state', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
