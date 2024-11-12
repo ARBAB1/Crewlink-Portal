@@ -31,6 +31,10 @@ const RegionManagement: React.FC = () => {
   const [isStateModalOpen, setIsStateModalOpen] = useState(false);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(100);
   const [editingCountry, setEditingCountry] = useState<Country | null>(null);
   const [editingState, setEditingState] = useState<StateType | null>(null);
   const [editingCity, setEditingCity] = useState<City | null>(null);
@@ -40,9 +44,9 @@ const RegionManagement: React.FC = () => {
   const token = localStorage.getItem('access_token');
 
   // Fetch countries
-  const fetchCountries = async () => {
+  const fetchCountries = async (search: string = '') => {
     try {
-      const response = await fetch('https://crewlink.development.logomish.com/check-in/get-all-countries-portal', {
+      const response = await fetch(`https://crewlink.development.logomish.com/check-in/get-all-countries-portal/${page}/${limit}?search=${search}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -52,6 +56,7 @@ const RegionManagement: React.FC = () => {
       });
       const data = await response.json();
       if (data.statusCode === 200) {
+        setTotalPages(data.totalPages);
         setCountries(data.data);
       } else {
         message.error('Failed to fetch countries');
@@ -68,7 +73,10 @@ const RegionManagement: React.FC = () => {
     fetchCountries();
 
   }, []);
-
+  const handleTableChange = (pagination: any) => {
+    setPage(pagination.current);
+    fetchCountries();
+  };
   // CRUD operations for Countries
   const handleAddCountry = async (values: Country) => {
     try {
@@ -133,7 +141,10 @@ const RegionManagement: React.FC = () => {
     setEditingCountry(null);
     form.resetFields();
   };
-
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    fetchCountries(e.target.value);
+  };
   const handleDeleteCountry = async (country_id: number) => {
     console.log(country_id)
     try {
@@ -196,7 +207,17 @@ const RegionManagement: React.FC = () => {
         >
           Add Country
         </Button>
-        <Table columns={countryColumns} dataSource={countries} rowKey="country_id" />
+        <Input
+        placeholder="Search by username"
+        value={searchQuery}
+        onChange={handleSearch}
+        style={{ marginBottom: 16, width: '200px' }}
+      />
+        <Table columns={countryColumns} dataSource={countries} rowKey="country_id"  pagination={{
+    current: page,
+ 
+    total: totalPages  // Total number of items
+  }} onChange={handleTableChange}  />
         <Modal
           title={isEditMode ? "Edit Country" : "Add Country"}
           open={isCountryModalOpen}

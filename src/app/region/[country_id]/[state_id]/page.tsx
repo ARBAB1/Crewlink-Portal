@@ -18,15 +18,19 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<any | null>(null);
   const [fileList, setFileList] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [limit, setLimit] = useState(10);
   const [form] = Form.useForm();
   const state_id = params.state_id; // Get state_id from URL params
   const router = useRouter();
   const Token = localStorage.getItem('access_token'); // Fetch access token from local storage
 
   // Fetch cities for the selected state
-  const fetchCities = async () => {
+  const fetchCities = async (search: string = '') => {
     try {
-      const response = await fetch(`https://crewlink.development.logomish.com/check-in/cities-by-state/${state_id}`, {
+      const response = await fetch(`https://crewlink.development.logomish.com/check-in/cities-by-state/${page}/${limit}/${state_id}?search=${search}`, {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'TwillioAPI',
@@ -47,7 +51,14 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
   useEffect(() => {
     fetchCities();
   }, [state_id]);
-
+  const handleTableChange = (pagination: any) => {
+    setPage(pagination.current);
+    fetchCities();
+  };
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    fetchCities(e.target.value);
+  };
   // Handle add or update city
   const handleAddOrUpdateCity = async (values: any) => {
     const url = editingCity
@@ -180,10 +191,23 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
             form.resetFields();
             setEditingCity(null);
           }}
+
         >
           Add City
         </Button>
-        <Table columns={cityColumns} dataSource={cities} rowKey="city_id" />
+        <Input
+        placeholder="Search by username"
+        value={searchQuery}
+        onChange={handleSearch}
+        style={{ marginBottom: 16, width: '200px' }}
+      />
+        <Table columns={cityColumns} dataSource={cities} rowKey="city_id"
+          pagination={{
+            current: page,
+
+            total: totalPages, // Total number of items
+          }}
+          onChange={handleTableChange} />
 
         {/* Add/Edit City Modal */}
         <Modal

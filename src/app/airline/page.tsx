@@ -20,13 +20,18 @@ const AirlineManagement: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedAirline, setSelectedAirline] = useState<Airline | null>(null);
   const [form] = Form.useForm();
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const [limit, setLimit] = useState(100);
   const [fileList, setFileList] = useState<any[]>([]);
   const token = localStorage.getItem('access_token');
 
   // Fetch Airlines using fetch API
-  const fetchAirlines = async () => {
+  const fetchAirlines = async (search: string = '') => {
     try {
-      const response = await fetch(`${baseUrl}/airline/get-all-airlines`, {
+      const response = await fetch(`${baseUrl}/airline/get-all-airlines/${page}/${limit}?search=${search}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -37,6 +42,7 @@ const AirlineManagement: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        setTotalPages(data.totalPages);
         setAirlines(data.data);
       } else {
         message.error('Failed to fetch airlines');
@@ -45,7 +51,10 @@ const AirlineManagement: React.FC = () => {
       message.error('Error fetching airlines');
     }
   };
-
+  const handleTableChange = (pagination: any) => {
+    setPage(pagination.current);
+    fetchAirlines();
+  };
   useEffect(() => {
     fetchAirlines();
   }, []);
@@ -92,6 +101,10 @@ const AirlineManagement: React.FC = () => {
     } catch (error) {
       message.error('Error adding airline');
     }
+  };
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    fetchAirlines(e.target.value);
   };
 
   // Handle Edit Airline
@@ -213,7 +226,6 @@ const AirlineManagement: React.FC = () => {
   return (
     <DefaultLayout>
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-8">Airline Management</h1>
         <Button
           type="primary"
           onClick={handleAddAirline}
@@ -221,7 +233,17 @@ const AirlineManagement: React.FC = () => {
         >
           Add Airline
         </Button>
-        <Table columns={columns} dataSource={airlines} rowKey="airline_id" style={{ marginTop: '20px' }} />
+        <Input
+        placeholder="Search by username"
+        value={searchQuery}
+        onChange={handleSearch}
+        style={{ marginBottom: 16, width: '200px' }}
+      />
+        <Table columns={columns} dataSource={airlines} rowKey="airline_id" style={{ marginTop: '20px' }}   pagination={{
+    current: page,
+ 
+    total: totalPages * limit, // Total number of items
+  }} onChange={handleTableChange} />
 
         {/* Add Airline Modal */}
         <Modal
@@ -275,6 +297,7 @@ const AirlineManagement: React.FC = () => {
           </Form>
         </Modal>
       </div>
+
     </DefaultLayout>
   );
 };
