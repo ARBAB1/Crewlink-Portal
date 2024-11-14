@@ -1,23 +1,89 @@
 "use client";
 
 import { ApexOptions } from "apexcharts";
-import React from "react";
+import React,{ useState, useEffect, use} from "react";
 import dynamic from "next/dynamic";
+import { message } from "antd";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-const options: ApexOptions = {
+
+interface ChartOneState {
+  series: {
+    name: string;
+    data: number[];
+  }[];
+}
+
+const ChartOne: React.FC = () => {
+  const Token = localStorage.getItem("access_token"); // Fetch access token from local storage
+const [userChartData, setUserChartData] = useState([]);
+const [postChartData, setPostChartData] = useState([]);
+  const fetchUser = async () => {
+  
+    try {
+      const response = await fetch(
+        `https://crewlink.development.logomish.com/admin/dashboard/users-stats`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "TwillioAPI",
+            accesstoken: `Bearer ${Token}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        setUserChartData(data.data);
+    
+      } else {
+        message.error("Failed to fetch states");
+      }
+    } catch (error) {
+      message.error("Error fetching states");
+    }
+  };
+  const fetchPost = async () => {
+  
+    try {
+      const response = await fetch(
+        `https://crewlink.development.logomish.com/admin/dashboard/posts-stats`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "TwillioAPI",
+            accesstoken: `Bearer ${Token}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (data.statusCode === 200) {
+   
+        setPostChartData(data.data);
+    
+      } else {
+        message.error("Failed to fetch states");
+      }
+    } catch (error) {
+      message.error("Error fetching states");
+    }
+  };
+  useEffect(() => {
+fetchPost();
+fetchUser();
+  }, []);
+  const options: ApexOptions = {
   legend: {
     show: false,
     position: "top",
     horizontalAlign: "left",
   },
-  colors: ["#3C50E0", "#80CAEE"],
+  colors: [ "#80CAEE"],
   chart: {
     fontFamily: "Satoshi, sans-serif",
-    height: 335,
+    height: 1735,
     type: "area",
     dropShadow: {
       enabled: true,
@@ -37,7 +103,7 @@ const options: ApexOptions = {
       breakpoint: 1024,
       options: {
         chart: {
-          height: 300,
+          height: 800,
         },
       },
     },
@@ -45,7 +111,7 @@ const options: ApexOptions = {
       breakpoint: 1366,
       options: {
         chart: {
-          height: 350,
+          height: 850,
         },
       },
     },
@@ -74,9 +140,9 @@ const options: ApexOptions = {
     enabled: false,
   },
   markers: {
-    size: 4,
+    size: 5,
     colors: "#fff",
-    strokeColors: ["#3056D3", "#80CAEE"],
+    strokeColors: [ "#80CAEE"],
     strokeWidth: 3,
     strokeOpacity: 0.9,
     strokeDashArray: 0,
@@ -111,72 +177,44 @@ const options: ApexOptions = {
     },
   },
   yaxis: {
+    
+    
     title: {
       style: {
         fontSize: "0px",
       },
     },
+    stepSize: 5000,
     min: 0,
-    max: 100,
+    max:  (Math.ceil(((Math.max(...userChartData))+(Math.max(...userChartData)*0.1))/10))*10,
   },
 };
 
-interface ChartOneState {
-  series: {
-    name: string;
-    data: number[];
-  }[];
-}
-
-const ChartOne: React.FC = () => {
   const series = [
       {
-        name: "Product One",
-        data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45],
+        name: "User",
+        data: userChartData,
       },
 
-      {
-        name: "Product Two",
-        data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
-      },
+    
     ]
 
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pb-5 pt-7.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-8">
       <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap">
         <div className="flex w-full flex-wrap gap-3 sm:gap-5">
-          <div className="flex min-w-47.5">
-            <span className="mr-2 mt-1 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-primary">
-              <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
-            </span>
-            <div className="w-full">
-              <p className="font-semibold text-primary">Total Revenue</p>
-              <p className="text-sm font-medium">$50000</p>
-            </div>
-          </div>
+         
           <div className="flex min-w-47.5">
             <span className="mr-2 mt-1 flex h-4 w-full max-w-4 items-center justify-center rounded-full border border-secondary">
               <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-secondary"></span>
             </span>
             <div className="w-full">
               <p className="font-semibold text-secondary">Total Users</p>
-              <p className="text-sm font-medium">56K</p>
+              <p className="text-sm font-medium">{userChartData.reduce((accumulator, currentValue) => accumulator + currentValue, 0)}</p>
             </div>
           </div>
         </div>
-        <div className="flex w-full max-w-45 justify-end">
-          <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark:bg-meta-4">
-            <button className="rounded bg-white px-3 py-1 text-xs font-medium text-black shadow-card hover:bg-white hover:shadow-card dark:bg-boxdark dark:text-white dark:hover:bg-boxdark">
-              Day
-            </button>
-            <button className="rounded px-3 py-1 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark">
-              Week
-            </button>
-            <button className="rounded px-3 py-1 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark">
-              Month
-            </button>
-          </div>
-        </div>
+       
       </div>
 
       <div>
