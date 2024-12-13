@@ -4,6 +4,7 @@ import { ApexOptions } from "apexcharts";
 import React,{ useState, useEffect, use} from "react";
 import dynamic from "next/dynamic";
 import { message } from "antd";
+import { baseUrl } from "@/constant";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -25,7 +26,7 @@ const [postChartData, setPostChartData] = useState([]);
   
     try {
       const response = await fetch(
-        `https://crewlink.development.logomish.com/admin/dashboard/users-stats`,
+        `${baseUrl}/admin/dashboard/users-stats`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -49,7 +50,7 @@ const [postChartData, setPostChartData] = useState([]);
   
     try {
       const response = await fetch(
-        `https://crewlink.development.logomish.com/admin/dashboard/posts-stats`,
+        `${baseUrl}/admin/dashboard/posts-stats`,
         {
           headers: {
             "Content-Type": "application/json",

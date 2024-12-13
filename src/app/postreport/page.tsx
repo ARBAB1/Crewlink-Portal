@@ -2,6 +2,7 @@
 import { Table, Button, Modal, message, Avatar, Input } from "antd";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useState, useEffect } from "react";
+import { baseUrl } from "@/constant";
 
 const PostReporting = () => {
   const [postReports, setPostReports] = useState<any[]>([]);
@@ -16,7 +17,7 @@ const PostReporting = () => {
   const fetchPostReports = async (search: string = "") => {
     try {
       const response = await fetch(
-        `https://crewlink.development.logomish.com/report/get-all-reported-posts/${page}/${limit}?search=${search}`,
+        `${baseUrl}/report/get-all-reported-posts/${page}/${limit}?search=${search}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -45,7 +46,7 @@ const PostReporting = () => {
   const handleDeletePostReport = async (post_id: number) => {
     try {
       const response = await fetch(
-        "https://crewlink.development.logomish.com/report/delete-reported-post",
+        `${baseUrl}/report/delete-reported-post`,
         {
           method: "POST",
           headers: {

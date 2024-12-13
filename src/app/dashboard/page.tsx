@@ -8,6 +8,7 @@ import TableOne from "../../components/Tables/TableOne";
 import CardDataStats from "../../components/CardDataStats";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { message } from "antd";
+import { baseUrl } from "@/constant";
 
 const MapOne = dynamic(() => import("@/components/Maps/MapOne"), {
   ssr: false,
@@ -27,7 +28,7 @@ const ECommerce: React.FC = () => {
   
     try {
       const response = await fetch(
-        `https://crewlink.development.logomish.com/admin/dashboard/arilines-and-subscribers-count`,
+        `${baseUrl}/admin/dashboard/arilines-and-subscribers-count`,
         {
           headers: {
             "Content-Type": "application/json",

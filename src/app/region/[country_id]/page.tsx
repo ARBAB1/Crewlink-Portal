@@ -4,6 +4,7 @@ import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation"; // Import useRouter for navigation
 import Search from "antd/es/transfer/search";
+import { baseUrl } from "@/constant";
 interface StateProps {
   params: {
     country_id: string;
@@ -28,7 +29,7 @@ const RegionManagement: React.FC<StateProps> = ({ params }) => {
   const fetchStates = async (search: string = "") => {
     try {
       const response = await fetch(
-        `https://crewlink.development.logomish.com/check-in/get-all-states-portal/${page}/${limit}/${country_id}?search=${search}`,
+        `${baseUrl}/check-in/get-all-states-portal/${page}/${limit}/${country_id}?search=${search}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -68,8 +69,8 @@ const RegionManagement: React.FC<StateProps> = ({ params }) => {
       "values",
     );
     const url = editingState
-      ? "https://crewlink.development.logomish.com/check-in/update-state"
-      : "https://crewlink.development.logomish.com/check-in/add-state";
+      ? `${baseUrl}/check-in/update-state`
+      : `${baseUrl}/check-in/add-state`;
 
     const method = editingState ? "POST" : "POST";
 
@@ -117,7 +118,7 @@ const RegionManagement: React.FC<StateProps> = ({ params }) => {
   const handleDeleteState = async (state_id: number) => {
     try {
       const response = await fetch(
-        "https://crewlink.development.logomish.com/check-in/delete-state",
+        "${baseUrl}/check-in/delete-state",
         {
           method: "POST",
           headers: {

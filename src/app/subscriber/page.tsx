@@ -2,6 +2,7 @@
 import { Table, Button, Modal, Form, Input, InputNumber, message } from 'antd';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { useState, useEffect } from 'react';
+import { baseUrl } from '@/constant';
 
 interface Subscriber {
   package_id: number;
@@ -26,7 +27,7 @@ const SubscriptionPage: React.FC = () => {
   // Fetch all packages
   const fetchPackages = async (search: string = '') => {
     try {
-      const response = await fetch(`https://crewlink.development.logomish.com/packages/get-all-packages/${page}/${limit}?search=${search}`, {
+      const response = await fetch(`${baseUrl}/packages/get-all-packages/${page}/${limit}?search=${search}`, {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'TwillioAPI',
@@ -54,8 +55,8 @@ const SubscriptionPage: React.FC = () => {
   // Handle add or update package
   const handleAddOrUpdatePackage = async (values: any) => {
     const url = editingPackage
-      ? 'https://crewlink.development.logomish.com/packages/update-package'
-      : 'https://crewlink.development.logomish.com/packages/create-package';
+      ? `${baseUrl}/packages/update-package`
+      : `${baseUrl}/packages/create-package`;
 
     const payload = editingPackage
       ? { ...values, package_id: editingPackage.package_id }
@@ -89,7 +90,7 @@ const SubscriptionPage: React.FC = () => {
   // Handle delete package
   const handleDeletePackage = async (package_id: number) => {
     try {
-      const response = await fetch('https://crewlink.development.logomish.com/packages/delete-package', {
+      const response = await fetch(`${baseUrl}/packages/delete-package`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

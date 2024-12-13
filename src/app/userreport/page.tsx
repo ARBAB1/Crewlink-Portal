@@ -3,6 +3,7 @@ import { Table, Button, Modal, Form, Input, message, Avatar } from "antd";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import { useState, useEffect } from "react";
 import { parse } from "path";
+import { baseUrl } from "@/constant";
 
 const UserReporting = () => {
   const [reports, setReports] = useState<any[]>([]);
@@ -18,7 +19,7 @@ const UserReporting = () => {
   const fetchReportedUsers = async (search: string = "") => {
     try {
       const response = await fetch(
-        `https://crewlink.development.logomish.com/report/get-all-reported-users/${page}/${limit}?search=${search}`,
+        `${baseUrl}/report/get-all-reported-users/${page}/${limit}?search=${search}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -50,7 +51,7 @@ const UserReporting = () => {
 
     try {
       const response = await fetch(
-        "https://crewlink.development.logomish.com/users/suspend-user",
+        `${baseUrl}/users/suspend-user`,
         {
           method: "POST",
           headers: {

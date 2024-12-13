@@ -5,6 +5,7 @@ import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 import type { RcFile } from 'antd/lib/upload';
+import { baseUrl } from '@/constant';
 
 interface CityProps {
   params: {
@@ -30,7 +31,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
   // Fetch cities for the selected state
   const fetchCities = async (search: string = '') => {
     try {
-      const response = await fetch(`https://crewlink.development.logomish.com/check-in/cities-by-state/${page}/${limit}/${state_id}?search=${search}`, {
+      const response = await fetch(`${baseUrl}/check-in/cities-by-state/${page}/${limit}/${state_id}?search=${search}`, {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': 'TwillioAPI',
@@ -62,8 +63,8 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
   // Handle add or update city
   const handleAddOrUpdateCity = async (values: any) => {
     const url = editingCity
-      ? 'https://crewlink.development.logomish.com/check-in/update-portal-city'
-      : 'https://crewlink.development.logomish.com/check-in/create-portal-city';
+      ? `${baseUrl}/check-in/update-portal-city`
+      : `${baseUrl}/check-in/create-portal-city`;
 
     const payload = new FormData();
     payload.append('city_name', values.city_name);
@@ -104,7 +105,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
   // Handle delete city
   const handleDeleteCity = async (city_id: number) => {
     try {
-      const response = await fetch('https://crewlink.development.logomish.com/check-in/delete-portal-city', {
+      const response = await fetch(`${baseUrl}/check-in/delete-portal-city`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

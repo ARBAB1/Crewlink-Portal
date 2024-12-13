@@ -4,6 +4,7 @@ import { Table, Button, Modal, Form, Input, Select, message } from 'antd';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter for navigation
+import { baseUrl } from '@/constant';
 
 interface Country {
   country_id: number;
@@ -46,7 +47,7 @@ const RegionManagement: React.FC = () => {
   // Fetch countries
   const fetchCountries = async (search: string = '') => {
     try {
-      const response = await fetch(`https://crewlink.development.logomish.com/check-in/get-all-countries-portal/${page}/${limit}?search=${search}`, {
+      const response = await fetch(`${baseUrl}/check-in/get-all-countries-portal/${page}/${limit}?search=${search}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ const RegionManagement: React.FC = () => {
   // CRUD operations for Countries
   const handleAddCountry = async (values: Country) => {
     try {
-      const response = await fetch('https://crewlink.development.logomish.com/check-in/add-country', {
+      const response = await fetch(`${baseUrl}/check-in/add-country`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -115,7 +116,7 @@ const RegionManagement: React.FC = () => {
   const handleUpdateCountry = async (values: Country) => {
     console.log(editingCountry?.country_id, editingCountry?.country_name, values.country_name)
     try {
-      const response = await fetch('https://crewlink.development.logomish.com/check-in/update-country', {
+      const response = await fetch(`${baseUrl}/check-in/update-country`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ const RegionManagement: React.FC = () => {
   const handleDeleteCountry = async (country_id: number) => {
     console.log(country_id)
     try {
-      const response = await fetch('https://crewlink.development.logomish.com/check-in/delete-country', {
+      const response = await fetch(`${baseUrl}/check-in/delete-country`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
