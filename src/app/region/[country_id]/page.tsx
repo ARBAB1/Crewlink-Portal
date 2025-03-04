@@ -196,7 +196,7 @@ const RegionManagement: React.FC<StateProps> = ({ params }) => {
           Add State
         </Button>
         <Input
-          placeholder="Search by username"
+          placeholder="Search by state name"
           value={searchQuery}
           onChange={handleSearch}
           style={{ marginBottom: 16, width: "200px" }}

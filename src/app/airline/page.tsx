@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, Upload, message, Space } from 'antd';
+import { Table, Button, Modal, Form, Input, Upload, message, Space, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { baseUrl } from '@/constant';
@@ -13,6 +13,11 @@ interface Airline {
   airline_abbreviation: string;
   logo_url: string;
 }
+interface Country {
+  country_id: number;
+  country_name: string;
+  countryCode: string;
+}
 
 const AirlineManagement: React.FC = () => {
   const [airlines, setAirlines] = useState<Airline[]>([]);
@@ -23,7 +28,8 @@ const AirlineManagement: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchQuery, setSearchQuery] = useState<string>('');
-
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [limit, setLimit] = useState(100);
   const [fileList, setFileList] = useState<any[]>([]);
   const token = localStorage.getItem('access_token');
@@ -31,7 +37,8 @@ const AirlineManagement: React.FC = () => {
   // Fetch Airlines using fetch API
   const fetchAirlines = async (search: string = '') => {
     try {
-      const response = await fetch(`${baseUrl}/airline/get-all-airlines/${page}/${limit}?search=${search}`, {
+  
+      const response = await fetch(`${baseUrl}/airline/get-all-airlines?search=${search}&page=${page}&limit=${limit}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -57,6 +64,7 @@ const AirlineManagement: React.FC = () => {
   };
   useEffect(() => {
     fetchAirlines();
+    fetchCountries();
   }, []);
 
   // Handle Add Airline
@@ -78,7 +86,7 @@ const AirlineManagement: React.FC = () => {
 
       const formData = new FormData();
       formData.append('name', values.name);
-      formData.append('country', values.country);
+      formData.append('country', selectedCountry);
       formData.append('airline_abbreviation', values.airline_abbreviation);
       formData.append('logo_url', fileList[0].originFileObj);
 
@@ -93,6 +101,7 @@ const AirlineManagement: React.FC = () => {
 
       if (response.ok) {
         message.success('Airline added successfully');
+        setSelectedCountry('');
         setIsModalOpen(false);
         fetchAirlines();
       } else {
@@ -222,7 +231,30 @@ const AirlineManagement: React.FC = () => {
       ),
     },
   ];
-
+  const fetchCountries = async (search: string = '') => {
+    try {
+      const response = await fetch(`${baseUrl}/check-in/get-all-countries-portal/1/1000?search=`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': 'TwillioAPI',
+          'accesstoken': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        // setTotalPages(data.totalPages);
+        setCountries(data.data);
+      } else {
+        message.error('Failed to fetch countries');
+      }
+    } catch (error) {
+      message.error('An error occurred while fetching countries');
+    }
+  };
+  const handleCountryChange = (value: string) => {
+    setSelectedCountry(value);
+  }
   return (
     <DefaultLayout>
       <div className="container mx-auto p-8">
@@ -234,7 +266,7 @@ const AirlineManagement: React.FC = () => {
           Add Airline
         </Button>
         <Input
-        placeholder="Search by username"
+        placeholder="Search by airline name"
         value={searchQuery}
         onChange={handleSearch}
         style={{ marginBottom: 16, width: '200px' }}
@@ -257,8 +289,20 @@ const AirlineManagement: React.FC = () => {
             <Form.Item name="name" label="Airline Name" rules={[{ required: true, message: 'Please input airline name!' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="country" label="Country" rules={[{ required: true, message: 'Please input country!' }]}>
-              <Input />
+            <Form.Item name="country" label="Country" rules={[{ required: true, message: 'Please select a country!' }]}>
+              <Select
+                showSearch
+                placeholder="Select a country"
+                optionFilterProp="children"
+                onChange={handleCountryChange}
+               
+              >
+                {countries.map((country) => (
+                  <Select.Option key={country.country_id} value={country.country_name}>
+                    {country.country_name}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
             <Form.Item name="airline_abbreviation" label="Airline Abbreviation" rules={[{ required: true, message: 'Please input abbreviation!' }]}>
               <Input />
@@ -283,8 +327,20 @@ const AirlineManagement: React.FC = () => {
             <Form.Item name="name" label="Airline Name" rules={[{ required: true, message: 'Please input airline name!' }]}>
               <Input />
             </Form.Item>
-            <Form.Item name="country" label="Country" rules={[{ required: true, message: 'Please input country!' }]}>
-              <Input />
+            <Form.Item name="country" label="Country" rules={[{ required: true, message: 'Please select a country!' }]}>
+              <Select
+                showSearch
+                placeholder="Select a country"
+                optionFilterProp="children"
+                onChange={handleCountryChange}
+               
+              >
+                {countries.map((country) => (
+                  <Select.Option key={country.country_id} value={country.country_name}>
+                    {country.country_name}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
             <Form.Item name="airline_abbreviation" label="Airline Abbreviation" rules={[{ required: true, message: 'Please input abbreviation!' }]}>
               <Input />

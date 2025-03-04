@@ -1,5 +1,5 @@
 "use client";
-import { Table, Button, Modal, Form, Input, message, Upload } from 'antd';
+import { Table, Button, Modal, Form, Input, message, Upload, Select } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import DefaultLayout from '@/components/Layouts/DefaultLayout';
 import { useState, useEffect } from 'react';
@@ -16,18 +16,46 @@ interface CityProps {
 
 const CityManagement: React.FC<CityProps> = ({ params }) => {
   const [cities, setCities] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
   const [isCityModalOpen, setIsCityModalOpen] = useState(false);
   const [editingCity, setEditingCity] = useState<any | null>(null);
+  const [cityStateId, setCityStateId] = useState<string>(params.state_id); // Initialize with params.state_id;
   const [fileList, setFileList] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [limit, setLimit] = useState(10);
   const [form] = Form.useForm();
+
+  const country_id = params.country_id; // Get country_id from URL params
   const state_id = params.state_id; // Get state_id from URL params
   const router = useRouter();
-  const Token = localStorage.getItem('access_token'); // Fetch access token from local storage
 
+  const Token = localStorage.getItem('access_token'); // Fetch access token from local storage
+  const fetchStates = async (search: string = "") => {
+    try {
+      const response = await fetch(
+        `${baseUrl}/check-in/get-all-states-portal/${page}/${limit}/${country_id}?search=${search}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": "TwillioAPI",
+            accesstoken: `Bearer ${Token}`,
+          },
+        },
+      );
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        // console.log(data, "data");
+        setTotalPages(data.totalPages);
+        setStates(data.data);
+      } else {
+        message.error("Failed to fetch states");
+      }
+    } catch (error) {
+      message.error("Error fetching states");
+    }
+  };
   // Fetch cities for the selected state
   const fetchCities = async (search: string = '') => {
     try {
@@ -40,6 +68,8 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
       });
       const data = await response.json();
       if (data.statusCode === 200) {
+        console.log(data, 'cities');
+      
         setCities(data.data);
       } else {
         message.error('Failed to fetch cities');
@@ -51,6 +81,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
 
   useEffect(() => {
     fetchCities();
+    fetchStates();
   }, [state_id]);
   const handleTableChange = (pagination: any) => {
     setPage(pagination.current);
@@ -62,6 +93,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
   };
   // Handle add or update city
   const handleAddOrUpdateCity = async (values: any) => {
+    console.log(cityStateId, "cityStateId");
     const url = editingCity
       ? `${baseUrl}/check-in/update-portal-city`
       : `${baseUrl}/check-in/create-portal-city`;
@@ -70,7 +102,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
     payload.append('city_name', values.city_name);
     payload.append('city_latitude', values.city_latitude);
     payload.append('city_longitude', values.city_longitude);
-    payload.append('state_id', state_id);
+    payload.append('state_id', cityStateId);
     if (values.city_image) {
       payload.append('city_image_url', values.city_image.file as RcFile);
     }
@@ -116,6 +148,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
       });
       const result = await response.json();
       if (result.statusCode === 200) {
+    
         message.success('City deleted successfully');
         fetchCities();
       } else {
@@ -136,6 +169,12 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
       title: 'City Name',
       dataIndex: 'city_name',
       key: 'city_name',
+    },
+    {
+      title: 'State',
+      dataIndex: 'state_id',
+      key: "state_id",
+      render: (text: any) => <>{state_id}</>, // Add the image rendering logic here
     },
     {
       title: 'Latitude',
@@ -166,6 +205,8 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
                 city_name: record.city_name,
                 city_latitude: record.city_latitude,
                 city_longitude: record.city_longitude,
+                city_image_url: record.city_image_url,
+                state_id: record.state_id
               });
             }}
             style={{ marginRight: 8 }}
@@ -197,7 +238,7 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
           Add City
         </Button>
         <Input
-        placeholder="Search by username"
+        placeholder="Search by city"
         value={searchQuery}
         onChange={handleSearch}
         style={{ marginBottom: 16, width: '200px' }}
@@ -232,6 +273,19 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
             >
               <Input />
             </Form.Item>
+            <Form.Item
+  name="state_id"
+  label="State"
+  rules={[{ required: true, message: 'Please select a state' }]}
+>
+  <Select>
+    {states.map((state: any) => (
+      <Select.Option key={state.state_id} value={state.state_id}>
+        {state.state_name}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
             <Form.Item
               name="city_longitude"
               label="City Longitude"

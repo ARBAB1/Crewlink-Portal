@@ -209,7 +209,7 @@ const RegionManagement: React.FC = () => {
           Add Country
         </Button>
         <Input
-        placeholder="Search by username"
+        placeholder="Search by Region Name"
         value={searchQuery}
         onChange={handleSearch}
         style={{ marginBottom: 16, width: '200px' }}

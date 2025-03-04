@@ -135,7 +135,7 @@ const PostReporting = () => {
       <div className="container mx-auto p-8">
         <h1 className="mb-8 text-3xl font-bold">Post Reporting Management</h1>
         <Input
-          placeholder="Search by username"
+          placeholder="Search by Post ID"
           value={searchQuery}
           onChange={handleSearch}
           style={{ marginBottom: 16, width: "200px" }}
