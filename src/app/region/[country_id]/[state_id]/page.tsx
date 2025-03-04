@@ -280,7 +280,10 @@ const CityManagement: React.FC<CityProps> = ({ params }) => {
 >
   <Select>
     {states.map((state: any) => (
-      <Select.Option key={state.state_id} value={state.state_id}>
+      <Select.Option 
+      placeholder="Select a state"
+       key={state.state_id}
+        value={state.state_id}>
         {state.state_name}
       </Select.Option>
     ))}
