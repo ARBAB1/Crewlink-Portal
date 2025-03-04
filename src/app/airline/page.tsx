@@ -51,6 +51,7 @@ const AirlineManagement: React.FC = () => {
         const data = await response.json();
         setTotalPages(data.totalPages);
         setAirlines(data.data);
+        
       } else {
         message.error('Failed to fetch airlines');
       }
